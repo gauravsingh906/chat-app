@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp</title>
+    <link rel="stylesheet" href="client.css">
+</head>
+
+<body>
+    <div class="chat-container">
+        <h1>Chat App</h1>
+
+        <div class="chat-box">
+            <div class="chat-log"></div>
+            <div class="chat-form">
+                <input type="text" class="chat-input" placeholder="Type your message here..." />
+                <button class="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="http://localhost:3300/socket.io/socket.io.js"></script>
+    <script>
+        // Establish connection with socket.io server
+        const socket = io.connect("http://localhost:3300");
+
+        // Prompt user to enter their name
+        const username = prompt("Enter your name");
+        socket.emit("user_name", username);
+
+        // DOM elements
+        const chatInput = document.querySelector(".chat-input");
+        const sendButton = document.querySelector(".send-button");
+        const chatLog = document.querySelector(".chat-log");
+
+        // Function to send a message
+        function sendMessage() {
+            const message = chatInput.value.trim(); // Trim message to avoid empty spaces
+            if (message !== "") {
+                socket.emit("message", message); // Emit message to server
+                appendMessage("You", message);   // Add the message to the log locally
+                chatInput.value = "";            // Clear the input field
+            }
+        }
+
+        // Append message to chat log
+        function appendMessage(sender, message, timeStamp) {
+            const messageElement = document.createElement("div");
+            messageElement.classList.add("chat-message");
+
+            // Format the timestamp to show only date and time
+            const date = new Date(timeStamp);
+            const formattedTime = date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true // Ensures 12-hour format with AM/PM
+            });
+
+            messageElement.textContent = `${sender}: ${message} ( ${formattedTime})`;
+            chatLog.appendChild(messageElement);
+            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll to the latest message
+        }
+
+
+        // Event listener for the send button
+        sendButton.addEventListener("click", sendMessage);
+
+        // Event listener for the Enter key
+        chatInput.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        // Listen for broadcast messages from the server
+        socket.on("broadcast_message", (userMessage) => {
+            console.log(userMessage)
+            appendMessage(userMessage.username, userMessage.message, userMessage.timeStamp)
+        });
+    </script>
+</body>
+
+</html>
