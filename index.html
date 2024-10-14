@@ -46,7 +46,7 @@
         }
 
         // Append message to chat log
-        function appendMessage(sender, message, timeStamp) {
+        function appendMessage(sender, message, timeStamp = Date.now()) {
             const messageElement = document.createElement("div");
             messageElement.classList.add("chat-message");
 
